@@ -17,7 +17,7 @@ Shadowraidersとは：http://www.cosaic.co.jp/games/sr.html
 test.pyでゲームを複数回プレイさせることができます。
 以下のコマンドで改変ルールをヒューリスティックプレイヤ5人で10000回プレイさせます。
 ```
-$python test.py
+$python main.py
 ```
 
 ## ファイル構造
