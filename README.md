@@ -21,17 +21,22 @@ $python main.py
 ```
 
 ## ファイル構造
-### game
+### shadowraiders
+ゲームに関するパッケージ
+#### game
 ゲームの進行や処理等
 - env.py : ランダム性を下げた改変ルール
 - env_real.py : 本来のルール
-### player_actions
+#### player_actions
 プレイヤの行動選択の処理等
 - player.py : 改変ルールでのヒューリスティックプレイヤ
 - player_random : ランダムな行動をとるプレイヤ
 - player_real.py : 本来のルールでのヒューリスティックプレイヤ
-### cards
+#### cards
 各カードの情報や処理等
 - black_cards.py : 黒のカード
 - detective_cards.py : 推理カード
 - white_cards.py : 白のカード
+
+### tests
+システムテスト
