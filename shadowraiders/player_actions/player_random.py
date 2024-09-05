@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from game.env import MyEnv
+from shadowraiders.game.env import MyEnv
 
 class PlayerRandom:
     def blackmist_random(self):

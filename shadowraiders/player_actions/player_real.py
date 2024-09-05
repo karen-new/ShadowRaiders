@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 #Playerの情報を保持し、Playerの選択を行うクラス
-class Player:  
+class PlayerReal:  
     def __init__(self, character, verbose=False, player_number=5):
         self.verbose = verbose
         self.player_number = player_number

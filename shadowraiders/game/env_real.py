@@ -10,11 +10,10 @@ import random
 import gym
 import numpy as np
 from more_itertools import distinct_permutations
-from cards.black_cards import BlackCards
-from cards.white_cards import WhiteCards
-from cards.detective_cards import DetectiveCards
-from estimation import Estimation
-from player_actions.player_real import Player
+from shadowraiders.cards.black_cards import BlackCards
+from shadowraiders.cards.white_cards import WhiteCards
+from shadowraiders.cards.detective_cards import DetectiveCards
+from shadowraiders.player_actions.player_real import Player
 
 #名前：陣営：HP：特殊効果
 shadow_characters = [
@@ -46,7 +45,7 @@ citizen_characters = [[c[0],c[1],int(c[2]),c[3]] for c in citizen_characters]
 player_number = 5
 
 
-class MyEnv(gym.Env):   
+class RealEnv(gym.Env):   
     #キャラクター：エリア：装備:ダメージ量  
     
     def __init__(self, verbose=True):
@@ -100,7 +99,6 @@ class MyEnv(gym.Env):
         self.white = WhiteCards(self.verbose, player_number, self.players)
         self.black = BlackCards(self.verbose, player_number, self.players)
         self.role_estimates = DetectiveCards(self.verbose, player_number, self.players)
-        self.estimation = Estimation(self.verbose, player_number, self.players)
 
         # 白のカードの初期設定
         self.white_deck = WhiteCards.white_cards.copy()
@@ -120,7 +118,7 @@ class MyEnv(gym.Env):
         if self.verbose:
             print(f"agent role: {self.players[0].character[1]}")
         
-        return self.estimation.get_obs()
+        return self.get_obs()
     
     
     def step(self, action, estimation_precision = False):
@@ -166,9 +164,6 @@ class MyEnv(gym.Env):
                             print(f"攻撃対象: player {self.get_index(target) + 1}")
 
                         if target and self.is_value_attack(player, target):
-                            if player != self.players[0]:
-                                # 攻撃対象を学習の入力に含めるための処理
-                                self.estimation.get_attack(player,target)
                             self.attack(player, target)
                         else:
                             if self.verbose:
@@ -178,14 +173,14 @@ class MyEnv(gym.Env):
                     win_lose = self.win_lose(self.players[0])
                     if win_lose:
                         done = True
-                        info = self.estimation.get_info(action)
+                        info = self.get_info(action)
                         if win_lose == 'win':
                             reward = 1
                         else:
                             reward = 0
                         if self.verbose:
-                            print(f"obs: {self.estimation.get_obs()}, reward: {reward}")
-                        return self.estimation.get_obs(), reward, done, info
+                            print(f"obs: {self.get_obs()}, reward: {reward}")
+                        return self.get_obs(), reward, done, info
 
                     # 封印の知恵を引いた場合、もう一度手番を行う
                     if player.seal_of_wisdom:
@@ -200,9 +195,33 @@ class MyEnv(gym.Env):
         # 勝敗が決まらなかった場合
         done = False
         if self.verbose:
-            print(f"obs: {self.estimation.get_obs()}")
+            print(f"obs: {self.get_obs()}")
         reward=0
-        return self.estimation.get_obs(), reward, done, info
+        return self.get_obs(), reward, done, info
+    
+    # 現在は各プレイヤのダメージのみ返す
+    def get_obs(self):
+        return np.array([player.damage for player in self.players])
+
+    # 3bit / 正しく推定できているプレイヤーの数を返す
+    def get_info(self, estimate_camp): 
+        correct = [0,0,0]
+        j = 0
+        for i, player in enumerate(self.players[1:], start=1):
+            camp = player.character[1]
+            if camp == 'C':
+                if estimate_camp[(i - 1) * 3 + 2] > 0.5:
+                    correct[2] += 1
+            elif camp == self.players[0].character[1]:
+                if estimate_camp[(i - 1) * 3] > 0.5:
+                    correct[0] += 1
+            else:
+                if estimate_camp[(i - 1) * 3 + 1] > 0.5:
+                    correct[1] += 1
+
+        if self.verbose:
+            print(f"correct: {correct}")
+        return correct, sum(correct)/4 # 推定の正しい数を返す
 
     # playerのインデックスを返す
     def get_index(self, player):
@@ -471,15 +490,10 @@ class MyEnv(gym.Env):
         card = player.blackmist_choice()
         
         if card == "W":
-            # ブラックミストからの学習への入力の処理
-            self.estimation.estimate_roles_blackmist("R", player)
             # 白のカードを引く処理
             self.cathedral(player, estimated_camp)
             
         if card == "B":
-            # ブラックミストからの学習への入力の処理
-            if self.black_deck: 
-                self.estimation.estimate_roles_blackmist("S",player)
             # 黒のカードを引く処理
             self.underground_passage(player, estimated_camp)
                 

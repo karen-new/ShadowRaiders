@@ -10,10 +10,10 @@ import random
 import gym
 import numpy as np
 from more_itertools import distinct_permutations
-from cards.black_cards import BlackCards
-from cards.white_cards import WhiteCards
-from cards.detective_cards import DetectiveCards
-from player_actions.player import Player
+from shadowraiders.cards.black_cards import BlackCards
+from shadowraiders.cards.white_cards import WhiteCards
+from shadowraiders.cards.detective_cards import DetectiveCards
+from shadowraiders.player_actions.player import Player
 
 #名前：陣営：HP：特殊効果
 shadow_characters = [
@@ -127,6 +127,12 @@ class MyEnv(gym.Env):
         reward=0 # 報酬の初期値を設定
         target=None # 攻撃の対象プレイヤ
         estimated_camp = None # 推定陣営のリスト(学習結果から与えられる)
+
+        # action の検証
+        if not isinstance(action, list):
+            raise ValueError("Action must be a list")   
+        if len(action) != (player_number - 1) * 3:
+            raise ValueError(f"Action must have exactly {(player_number - 1) * 3} elements")
 
         # 推定精度を設定して行う場合
         if estimation_precision:
